@@ -1,0 +1,911 @@
+     1→"use client";
+     2→
+     3→import { useState, useRef, useCallback, useEffect } from "react";
+     4→import { Input } from "components/ui/input";
+     5→import { Badge } from "components/ui/badge";
+     6→import { Button } from "components/ui/button";
+     7→import {
+     8→  categorySections,
+     9→  type AppItem,
+    10→} from "@/lib/app-data";
+    11→import {
+    12→  marketplaceData,
+    13→  topNavCategories,
+    14→  type CategoryGroup,
+    15→  type SubCategory,
+    16→  type TopLevelCategory,
+    17→} from "@/lib/categories";
+    18→
+    19→/* ═══════════════════════════════════════════════════════════
+    20→   VIEW STATES
+    21→   ═══════════════════════════════════════════════════════════ */
+    22→type ViewMode =
+    23→  | { kind: "home" }
+    24→  | { kind: "topCategory"; cat: TopLevelCategory }
+    25→  | { kind: "categoryGroup"; cat: TopLevelCategory; group: CategoryGroup }
+    26→  | { kind: "search"; query: string }
+    27→
+    28→/* ─── tiny star renderer ─── */
+    29→function Stars({ rating }: { rating: number }) {
+    30→  return (
+    31→    <span className="inline-flex items-center gap-0.5">
+    32→      {[1, 2, 3, 4, 5].map((i) => (
+    33→        <svg
+    34→          key={i}
+    35→          className={`h-3 w-3 ${
+    36→            i <= Math.round(rating)
+    37→              ? "text-amber-400"
+    38→              : "text-zinc-200 dark:text-zinc-700"
+    39→          }`}
+    40→          fill="currentColor"
+    41→          viewBox="0 0 20 20"
+    42→        >
+    43→          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+    44→        </svg>
+    45→      ))}
+    46→    </span>
+    47→  );
+    48→}
+    49→
+    50→/* ─── App Card (vertical for carousels) ─── */
+    51→function AppCard({ app }: { app: AppItem }) {
+    52→  return (
+    53→    <button className="group flex flex-col items-center text-center p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all duration-200 w-full min-w-[100px] snap-start">
+    54→      <div
+    55→        className={`w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-[22px] ${app.iconBg} flex items-center justify-center text-2xl sm:text-3xl shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 flex-shrink-0 relative`}
+    56→      >
+    57→        {app.icon}
+    58→        {app.badge && (
+    59→          <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+    60→            {app.badge}
+    61→          </span>
+    62→        )}
+    63→      </div>
+    64→      <p className="text-[13px] font-medium mt-2.5 line-clamp-2 text-zinc-900 dark:text-zinc-100 leading-tight max-w-[120px]">
+    65→        {app.name}
+    66→      </p>
+    67→      <div className="flex items-center gap-1 mt-1">
+    68→        <span className="text-xs text-zinc-600 dark:text-zinc-400">
+    69→          {app.rating}
+    70→        </span>
+    71→        <Stars rating={app.rating} />
+    72→      </div>
+    73→      <p
+    74→        className={`text-xs mt-0.5 font-medium ${
+    75→          app.price === "Free"
+    76→            ? "text-emerald-600 dark:text-emerald-400"
+    77→            : "text-zinc-600 dark:text-zinc-400"
+    78→        }`}
+    79→      >
+    80→        {app.price}
+    81→      </p>
+    82→    </button>
+    83→  );
+    84→}
+    85→
+    86→/* ─── Compact App Card (horizontal for lists) ─── */
+    87→function CompactAppCard({ app }: { app: AppItem }) {
+    88→  return (
+    89→    <button className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors text-left">
+    90→      <div
+    91→        className={`w-12 h-12 rounded-2xl ${app.iconBg} flex items-center justify-center text-xl flex-shrink-0 shadow-sm`}
+    92→      >
+    93→        {app.icon}
+    94→      </div>
+    95→      <div className="min-w-0 flex-1">
+    96→        <p className="text-sm font-medium truncate text-zinc-900 dark:text-zinc-100">
+    97→          {app.name}
+    98→        </p>
+    99→        <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+   100→          {app.developer}
+   101→        </p>
+   102→      </div>
+   103→      <div className="flex-shrink-0 text-right">
+   104→        <div className="flex items-center gap-1">
+   105→          <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+   106→            {app.rating}
+   107→          </span>
+   108→          <Stars rating={app.rating} />
+   109→        </div>
+   110→        <p
+   111→          className={`text-xs mt-0.5 ${
+   112→            app.price === "Free"
+   113→              ? "text-emerald-600 dark:text-emerald-400"
+   114→              : "text-zinc-600 dark:text-zinc-400"
+   115→          }`}
+   116→        >
+   117→          {app.price}
+   118→        </p>
+   119→      </div>
+   120→    </button>
+   121→  );
+   122→}
+   123→
+   124→/* ─── Bento App Card ─── */
+   125→function BentoAppCard({ app, className = "" }: { app: AppItem; className?: string }) {
+   126→  return (
+   127→    <button
+   128→      className={`group relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-5 hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-zinc-900/50 transition-all duration-300 hover:-translate-y-0.5 text-left ${className}`}
+   129→    >
+   130→      <div className="flex items-start gap-4">
+   131→        <div
+   132→          className={`w-14 h-14 rounded-2xl ${app.iconBg} flex items-center justify-center text-2xl shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}
+   133→        >
+   134→          {app.icon}
+   135→          {app.badge && (
+   136→            <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+   137→              {app.badge}
+   138→            </span>
+   139→          )}
+   140→        </div>
+   141→        <div className="min-w-0 flex-1">
+   142→          <div className="flex items-center gap-2">
+   143→            <h4 className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 truncate">
+   144→              {app.name}
+   145→            </h4>
+   146→            <Badge
+   147→              variant="secondary"
+   148→              className="text-[10px] px-1.5 py-0 h-4 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0 flex-shrink-0"
+   149→            >
+   150→              {app.category}
+   151→            </Badge>
+   152→          </div>
+   153→          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+   154→            {app.developer}
+   155→          </p>
+   156→          <div className="flex items-center gap-2 mt-1.5">
+   157→            <Stars rating={app.rating} />
+   158→            <span className="text-xs text-zinc-600 dark:text-zinc-400">
+   159→              {app.rating}
+   160→            </span>
+   161→            <span className="text-xs text-zinc-400 dark:text-zinc-500">
+   162→              {app.reviews} reviews
+   163→            </span>
+   164→          </div>
+   165→        </div>
+   166→      </div>
+   167→      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-3 line-clamp-2 leading-relaxed">
+   168→        {app.description}
+   169→      </p>
+   170→      <div className="flex items-center justify-between mt-4">
+   171→        <span className="text-xs text-zinc-400 dark:text-zinc-500">{app.size}</span>
+   172→        <span
+   173→          className={`text-sm font-semibold ${
+   174→            app.price === "Free"
+   175→              ? "text-emerald-600 dark:text-emerald-400"
+   176→              : "text-zinc-900 dark:text-zinc-100"
+   177→          }`}
+   178→        >
+   179→          {app.price}
+   180→        </span>
+   181→      </div>
+   182→    </button>
+   183→  );
+   184→}
+   185→
+   186→/* ─── App Carousel ─── */
+   187→function AppCarousel({ title, apps }: { title: string; apps: AppItem[] }) {
+   188→  return (
+   189→    <section className="mb-6">
+   190→      <div className="flex items-center justify-between px-1 mb-3">
+   191→        <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{title}</h2>
+   192→        <button className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors">
+   193→          See all
+   194→        </button>
+   195→      </div>
+   196→      <div className="flex gap-1 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2 -mx-1 px-1">
+   197→        {apps.map((app) => (
+   198→          <AppCard key={app.id} app={app} />
+   199→        ))}
+   200→      </div>
+   201→    </section>
+   202→  );
+   203→}
+   204→
+   205→/* ═══════════════════════════════════════════════════════════
+   206→   CATEGORY COMPONENTS
+   207→   ═══════════════════════════════════════════════════════════ */
+   208→
+   209→/* ─── Top-Level Category Card (bento) ─── */
+   210→function TopCategoryCard({
+   211→  cat,
+   212→  onSelect,
+   213→}: {
+   214→  cat: TopLevelCategory;
+   215→  onSelect: () => void;
+   216→}) {
+   217→  const totalApps = cat.groups.reduce(
+   218→    (acc, g) => acc + g.subcategories.reduce((a, s) => a + s.count, 0),
+   219→    0
+   220→  );
+   221→  return (
+   222→    <button
+   223→      onClick={onSelect}
+   224→      className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br ${cat.gradient} p-6 sm:p-8 text-left text-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.02]`}
+   225→    >
+   226→      <div className="relative z-10">
+   227→        <span className="text-4xl sm:text-5xl block mb-3 group-hover:scale-110 transition-transform duration-300">
+   228→          {cat.icon}
+   229→        </span>
+   230→        <h3 className="text-xl sm:text-2xl font-bold">{cat.name}</h3>
+   231→        <p className="text-sm text-white/75 mt-1">{cat.description}</p>
+   232→        <div className="flex items-center gap-2 mt-4">
+   233→          <span className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold">
+   234→            {cat.groups.length} categories
+   235→          </span>
+   236→          <span className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold">
+   237→            {(totalApps / 1000).toFixed(0)}K+ apps
+   238→          </span>
+   239→        </div>
+   240→      </div>
+   241→      {/* decorative circles */}
+   242→      <div className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full bg-white/10 group-hover:scale-150 transition-transform duration-500" />
+   243→      <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/5 group-hover:scale-125 transition-transform duration-500" />
+   244→    </button>
+   245→  );
+   246→}
+   247→
+   248→/* ─── Category Group Card (bento) ─── */
+   249→function CategoryGroupCard({
+   250→  group,
+   251→  onSelect,
+   252→  index,
+   253→}: {
+   254→  group: CategoryGroup;
+   255→  onSelect: () => void;
+   256→  index: number;
+   257→}) {
+   258→  const totalApps = group.subcategories.reduce((a, s) => a + s.count, 0);
+   259→  const isLarge = index === 0;
+   260→  return (
+   261→    <button
+   262→      onClick={onSelect}
+   263→      className={`group relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-left transition-all duration-300 hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-zinc-900/50 hover:-translate-y-0.5 ${
+   264→        isLarge ? "sm:col-span-2" : ""
+   265→      }`}
+   266→    >
+   267→      {/* gradient accent bar */}
+   268→      <div className={`h-1.5 bg-gradient-to-r ${group.color}`} />
+   269→      <div className="p-5 sm:p-6">
+   270→        <div className="flex items-start gap-4">
+   271→          <div
+   272→            className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${group.color} flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}
+   273→          >
+   274→            {group.icon}
+   275→          </div>
+   276→          <div className="min-w-0 flex-1">
+   277→            <h3 className="font-bold text-base text-zinc-900 dark:text-zinc-100">
+   278→              {group.name}
+   279→            </h3>
+   280→            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+   281→              {group.description}
+   282→            </p>
+   283→          </div>
+   284→        </div>
+   285→
+   286→        {/* preview chips for first few subcategories */}
+   287→        <div className="flex flex-wrap gap-1.5 mt-4">
+   288→          {group.subcategories.slice(0, isLarge ? 6 : 4).map((sub) => (
+   289→            <span
+   290→              key={sub.name}
+   291→              className={`${sub.color} text-[11px] font-medium px-2.5 py-1 rounded-full`}
+   292→            >
+   293→              {sub.icon} {sub.name}
+   294→            </span>
+   295→          ))}
+   296→          {group.subcategories.length > (isLarge ? 6 : 4) && (
+   297→            <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+   298→              +{group.subcategories.length - (isLarge ? 6 : 4)} more
+   299→            </span>
+   300→          )}
+   301→        </div>
+   302→
+   303→        <div className="flex items-center justify-between mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+   304→          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+   305→            {group.subcategories.length} subcategories
+   306→          </span>
+   307→          <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+   308→            {(totalApps / 1000).toFixed(1)}K apps
+   309→          </span>
+   310→        </div>
+   311→      </div>
+   312→    </button>
+   313→  );
+   314→}
+   315→
+   316→/* ─── SubCategory Bento Tile ─── */
+   317→function SubCategoryTile({
+   318→  sub,
+   319→  index,
+   320→}: {
+   321→  sub: SubCategory;
+   322→  index: number;
+   323→}) {
+   324→  const isHero = index === 0;
+   325→  return (
+   326→    <button
+   327→      className={`group relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 transition-all duration-300 hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-zinc-900/50 hover:-translate-y-0.5 text-left ${
+   328→        isHero ? "sm:col-span-2 sm:row-span-2" : ""
+   329→      }`}
+   330→    >
+   331→      <div className={isHero ? "p-6 sm:p-8" : "p-4 sm:p-5"}>
+   332→        <div className="flex items-start gap-3 sm:gap-4">
+   333→          <div
+   334→            className={`${
+   335→              isHero
+   336→                ? "w-16 h-16 sm:w-20 sm:h-20 text-3xl sm:text-4xl"
+   337→                : "w-11 h-11 sm:w-13 sm:h-13 text-xl sm:text-2xl"
+   338→            } rounded-2xl ${sub.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}
+   339→          >
+   340→            {sub.icon}
+   341→          </div>
+   342→          <div className="min-w-0 flex-1">
+   343→            <h4
+   344→              className={`font-bold text-zinc-900 dark:text-zinc-100 ${
+   345→                isHero ? "text-lg sm:text-xl" : "text-sm"
+   346→              }`}
+   347→            >
+   348→              {sub.name}
+   349→            </h4>
+   350→            <p
+   351→              className={`text-zinc-500 dark:text-zinc-400 mt-0.5 ${
+   352→                isHero ? "text-sm" : "text-xs"
+   353→              }`}
+   354→            >
+   355→              {sub.count.toLocaleString()} apps
+   356→            </p>
+   357→          </div>
+   358→        </div>
+   359→        {isHero && (
+   360→          <div className="mt-4 flex items-center gap-2">
+   361→            <span className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-medium px-2.5 py-1 rounded-full">
+   362→              Popular
+   363→            </span>
+   364→            <span className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-medium px-2.5 py-1 rounded-full">
+   365→              Trending
+   366→            </span>
+   367→          </div>
+   368→        )}
+   369→      </div>
+   370→    </button>
+   371→  );
+   372→}
+   373→
+   374→/* ─── Breadcrumb ─── */
+   375→function Breadcrumb({
+   376→  segments,
+   377→  onNavigate,
+   378→}: {
+   379→  segments: { label: string; icon?: string }[];
+   380→  onNavigate: (index: number) => void;
+   381→}) {
+   382→  return (
+   383→    <nav className="flex items-center gap-1.5 mb-6 overflow-x-auto scrollbar-hide py-1">
+   384→      {segments.map((seg, i) => {
+   385→        const isLast = i === segments.length - 1;
+   386→        return (
+   387→          <div key={i} className="flex items-center gap-1.5 flex-shrink-0">
+   388→            {i > 0 && (
+   389→              <svg
+   390→                className="h-3.5 w-3.5 text-zinc-300 dark:text-zinc-600"
+   391→                fill="none"
+   392→                viewBox="0 0 24 24"
+   393→                stroke="currentColor"
+   394→                strokeWidth={2}
+   395→              >
+   396→                <path
+   397→                  strokeLinecap="round"
+   398→                  strokeLinejoin="round"
+   399→                  d="M9 5l7 7-7 7"
+   400→                />
+   401→              </svg>
+   402→            )}
+   403→            <button
+   404→              onClick={() => !isLast && onNavigate(i)}
+   405→              className={`flex items-center gap-1.5 text-sm font-medium transition-colors whitespace-nowrap ${
+   406→                isLast
+   407→                  ? "text-zinc-900 dark:text-zinc-100 cursor-default"
+   408→                  : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+   409→              }`}
+   410→            >
+   411→              {seg.icon && <span>{seg.icon}</span>}
+   412→              {seg.label}
+   413→            </button>
+   414→          </div>
+   415→        );
+   416→      })}
+   417→    </nav>
+   418→  );
+   419→}
+   420→
+   421→/* ═══════════════════════════════════════════════════════════
+   422→   MAIN PAGE
+   423→   ═══════════════════════════════════════════════════════════ */
+   424→export default function AppStorePage() {
+   425→  const [view, setView] = useState<ViewMode>({ kind: "home" });
+   426→  const [searchQuery, setSearchQuery] = useState("");
+   427→  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+   428→
+   429→  const allApps = categorySections.flatMap((s) => s.apps);
+   430→
+   431→  const handleNavClick = useCallback((name: string) => {
+   432→    setSearchQuery("");
+   433→    setMobileMenuOpen(false);
+   434→    if (name === "Home") {
+   435→      setView({ kind: "home" });
+   436→    } else {
+   437→      const cat = marketplaceData.find(
+   438→        (c) => c.name === name || c.id === name.toLowerCase()
+   439→      );
+   440→      if (cat) setView({ kind: "topCategory", cat });
+   441→    }
+   442→  }, []);
+   443→
+   444→  const handleSearch = useCallback(
+   445→    (q: string) => {
+   446→      setSearchQuery(q);
+   447→      if (q.trim()) {
+   448→        setView({ kind: "search", query: q.trim() });
+   449→      } else {
+   450→        setView({ kind: "home" });
+   451→      }
+   452→    },
+   453→    []
+   454→  );
+   455→
+   456→  // keyboard shortcut: Escape to go back
+   457→  useEffect(() => {
+   458→    const handler = (e: KeyboardEvent) => {
+   459→      if (e.key === "Escape") {
+   460→        if (view.kind === "categoryGroup") {
+   461→          setView({ kind: "topCategory", cat: view.cat });
+   462→        } else if (view.kind === "topCategory" || view.kind === "search") {
+   463→          setView({ kind: "home" });
+   464→          setSearchQuery("");
+   465→        }
+   466→      }
+   467→    };
+   468→    window.addEventListener("keydown", handler);
+   469→    return () => window.removeEventListener("keydown", handler);
+   470→  }, [view]);
+   471→
+   472→  // scroll to top on view change
+   473→  useEffect(() => {
+   474→    window.scrollTo({ top: 0, behavior: "smooth" });
+   475→  }, [view.kind]);
+   476→
+   477→  /* ─── Determine breadcrumbs ─── */
+   478→  const breadcrumbs: { label: string; icon?: string }[] = [{ label: "Home", icon: "🏠" }];
+   479→  if (view.kind === "topCategory") {
+   480→    breadcrumbs.push({ label: view.cat.name, icon: view.cat.icon });
+   481→  } else if (view.kind === "categoryGroup") {
+   482→    breadcrumbs.push(
+   483→      { label: view.cat.name, icon: view.cat.icon },
+   484→      { label: view.group.name, icon: view.group.icon }
+   485→    );
+   486→  } else if (view.kind === "search") {
+   487→    breadcrumbs.push({ label: `Search: "${view.query}"`, icon: "🔍" });
+   488→  }
+   489→
+   490→  /* ─── Determine active nav tab ─── */
+   491→  const activeTab =
+   492→    view.kind === "home"
+   493→      ? "Home"
+   494→      : view.kind === "topCategory"
+   495→        ? view.cat.name
+   496→        : view.kind === "categoryGroup"
+   497→          ? view.cat.name
+   498→          : "Home";
+   499→
+   500→  /* ─── Search filtered results ─── */
+   501→  const filteredApps =
+   502→    view.kind === "search"
+   503→      ? allApps.filter(
+   504→          (a) =>
+   505→            a.name.toLowerCase().includes(view.query.toLowerCase()) ||
+   506→            a.developer.toLowerCase().includes(view.query.toLowerCase()) ||
+   507→            a.category.toLowerCase().includes(view.query.toLowerCase())
+   508→        )
+   509→      : null;
+   510→
+   511→  return (
+   512→    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+   513→      {/* ═══════ HEADER ═══════ */}
+   514→      <header className="sticky top-0 z-50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-200/60 dark:border-zinc-800/60">
+   515→        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+   516→          <div className="flex items-center h-14 sm:h-16 gap-3">
+   517→            {/* Logo */}
+   518→            <button
+   519→              onClick={() => handleNavClick("Home")}
+   520→              className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-opacity"
+   521→            >
+   522→              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+   523→                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+   524→                  <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+   525→                  <path d="M12 12v9" /><path d="m8 17 4 4 4-4" />
+   526→                </svg>
+   527→              </div>
+   528→              <span className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 hidden sm:block">
+   529→                AppStore
+   530→              </span>
+   531→            </button>
+   532→
+   533→            {/* Nav Tabs - Desktop */}
+   534→            <nav className="hidden md:flex items-center gap-1 ml-6">
+   535→              {topNavCategories.map((cat) => (
+   536→                <button
+   537→                  key={cat.name}
+   538→                  onClick={() => handleNavClick(cat.name)}
+   539→                  className={`px-3 lg:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+   540→                    activeTab === cat.name
+   541→                      ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400"
+   542→                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+   543→                  }`}
+   544→                >
+   545→                  <span className="mr-1.5">{cat.icon}</span>
+   546→                  {cat.name}
+   547→                </button>
+   548→              ))}
+   549→            </nav>
+   550→
+   551→            {/* Search */}
+   552→            <div className="flex-1 max-w-md mx-auto">
+   553→              <div className="relative">
+   554→                <svg
+   555→                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"
+   556→                  fill="none"
+   557→                  viewBox="0 0 24 24"
+   558→                  stroke="currentColor"
+   559→                  strokeWidth={2}
+   560→                >
+   561→                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+   562→                </svg>
+   563→                <Input
+   564→                  type="text"
+   565→                  placeholder="Search apps, games, books..."
+   566→                  value={searchQuery}
+   567→                  onChange={(e) => handleSearch(e.target.value)}
+   568→                  className="pl-9 pr-4 h-9 sm:h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 border-0 text-sm focus-visible:ring-2 focus-visible:ring-emerald-500/30 focus-visible:bg-white dark:focus-visible:bg-zinc-900 transition-all"
+   569→                />
+   570→                {searchQuery && (
+   571→                  <button
+   572→                    onClick={() => handleSearch("")}
+   573→                    className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center hover:bg-zinc-300 dark:hover:bg-zinc-600 transition-colors"
+   574→                  >
+   575→                    <svg className="h-3 w-3 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+   576→                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+   577→                    </svg>
+   578→                  </button>
+   579→                )}
+   580→              </div>
+   581→            </div>
+   582→
+   583→            {/* Right icons */}
+   584→            <div className="flex items-center gap-2 flex-shrink-0">
+   585→              <Button
+   586→                variant="ghost"
+   587→                size="icon"
+   588→                className="rounded-xl h-9 w-9 md:hidden"
+   589→                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+   590→              >
+   591→                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+   592→                  <path strokeLinecap="round" strokeLinejoin="round" d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+   593→                </svg>
+   594→              </Button>
+   595→              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold shadow-md cursor-pointer">
+   596→                U
+   597→              </div>
+   598→            </div>
+   599→          </div>
+   600→        </div>
+   601→
+   602→        {/* Mobile Category Menu */}
+   603→        {mobileMenuOpen && (
+   604→          <div className="md:hidden border-t border-zinc-100 dark:border-zinc-800 px-4 py-3">
+   605→            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+   606→              {topNavCategories.map((cat) => (
+   607→                <button
+   608→                  key={cat.name}
+   609→                  onClick={() => handleNavClick(cat.name)}
+   610→                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-sm font-medium transition-all duration-200 flex-shrink-0 ${
+   611→                    activeTab === cat.name
+   612→                      ? "bg-emerald-500 text-white shadow-md"
+   613→                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+   614→                  }`}
+   615→                >
+   616→                  <span>{cat.icon}</span>
+   617→                  <span>{cat.name}</span>
+   618→                </button>
+   619→              ))}
+   620→            </div>
+   621→          </div>
+   622→        )}
+   623→      </header>
+   624→
+   625→      {/* ═══════ MAIN CONTENT ═══════ */}
+   626→      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
+   627→        {/* ── Breadcrumb (not on home) ── */}
+   628→        {view.kind !== "home" && (
+   629→          <Breadcrumb
+   630→            segments={breadcrumbs}
+   631→            onNavigate={(index) => {
+   632→              if (index === 0) {
+   633→                setView({ kind: "home" });
+   634→                setSearchQuery("");
+   635→              } else if (view.kind === "categoryGroup" && index === 1) {
+   636→                setView({ kind: "topCategory", cat: view.cat });
+   637→              }
+   638→            }}
+   639→          />
+   640→        )}
+   641→
+   642→        {/* ═══════════════════════════════════════════════════
+   643→           HOME VIEW
+   644→           ═══════════════════════════════════════════════════ */}
+   645→        {view.kind === "home" && (
+   646→          <>
+   647→            {/* ── Top-Level Category Bento Grid ── */}
+   648→            <section className="mb-8">
+   649→              <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 px-1 mb-4">
+   650→                Explore Categories
+   651→              </h2>
+   652→              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   653→                {marketplaceData.map((cat) => (
+   654→                  <TopCategoryCard
+   655→                    key={cat.id}
+   656→                    cat={cat}
+   657→                    onSelect={() => setView({ kind: "topCategory", cat })}
+   658→                  />
+   659→                ))}
+   660→              </div>
+   661→            </section>
+   662→
+   663→            {/* ── Category Carousels ── */}
+   664→            {categorySections.map((section) => (
+   665→              <AppCarousel
+   666→                key={section.title}
+   667→                title={section.title}
+   668→                apps={section.apps}
+   669→              />
+   670→            ))}
+   671→
+   672→            {/* ── Bento Grid: Top Picks ── */}
+   673→            <section className="mb-8">
+   674→              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 px-1 mb-3">
+   675→                Top Picks for You
+   676→              </h2>
+   677→              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   678→                {allApps.slice(0, 6).map((app, i) => (
+   679→                  <BentoAppCard
+   680→                    key={app.id}
+   681→                    app={app}
+   682→                    className={i === 0 ? "sm:col-span-2 lg:col-span-2" : ""}
+   683→                  />
+   684→                ))}
+   685→              </div>
+   686→            </section>
+   687→
+   688→            {/* ── Bento Grid: Editors' Choice ── */}
+   689→            <section className="mb-8">
+   690→              <div className="flex items-center gap-2 px-1 mb-3">
+   691→                <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+   692→                  Editors&apos; Choice
+   693→                </h2>
+   694→                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-0 gap-1">
+   695→                  ✨ Curated
+   696→                </Badge>
+   697→              </div>
+   698→              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+   699→                {allApps
+   700→                  .filter((a) => a.rating >= 4.4)
+   701→                  .slice(0, 8)
+   702→                  .map((app, i) => (
+   703→                    <BentoAppCard
+   704→                      key={app.id}
+   705→                      app={app}
+   706→                      className={i === 0 ? "sm:col-span-2" : ""}
+   707→                    />
+   708→                  ))}
+   709→              </div>
+   710→            </section>
+   711→
+   712→            {/* ── Trending Compact List ── */}
+   713→            <section className="mb-8">
+   714→              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 px-1 mb-3">
+   715→                Trending Now
+   716→              </h2>
+   717→              <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800 divide-y divide-zinc-50 dark:divide-zinc-800 p-2">
+   718→                {allApps.slice(0, 8).map((app, i) => (
+   719→                  <div key={app.id} className="flex items-center gap-3">
+   720→                    <span className="text-sm font-bold text-zinc-300 dark:text-zinc-600 w-6 text-center flex-shrink-0">
+   721→                      {i + 1}
+   722→                    </span>
+   723→                    <CompactAppCard app={app} />
+   724→                  </div>
+   725→                ))}
+   726→              </div>
+   727→            </section>
+   728→          </>
+   729→        )}
+   730→
+   731→        {/* ═══════════════════════════════════════════════════
+   732→           TOP CATEGORY VIEW (e.g., Apps)
+   733→           ═══════════════════════════════════════════════════ */}
+   734→        {view.kind === "topCategory" && (
+   735→          <>
+   736→            {/* Hero banner */}
+   737→            <div
+   738→              className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${view.cat.gradient} p-6 sm:p-10 text-white mb-8`}
+   739→            >
+   740→              <div className="relative z-10">
+   741→                <span className="text-5xl sm:text-6xl block mb-4">{view.cat.icon}</span>
+   742→                <h1 className="text-2xl sm:text-4xl font-bold">{view.cat.name}</h1>
+   743→                <p className="text-base sm:text-lg text-white/80 mt-2 max-w-lg">
+   744→                  {view.cat.description}
+   745→                </p>
+   746→                <div className="flex flex-wrap gap-2 mt-5">
+   747→                  <span className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-semibold">
+   748→                    {view.cat.groups.length} categories
+   749→                  </span>
+   750→                  <span className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-semibold">
+   751→                    {view.cat.groups.reduce((a, g) => a + g.subcategories.length, 0)} subcategories
+   752→                  </span>
+   753→                </div>
+   754→              </div>
+   755→              <div className="absolute -bottom-8 -right-8 w-48 h-48 rounded-full bg-white/10" />
+   756→              <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-white/5" />
+   757→              <div className="absolute bottom-4 right-20 w-16 h-16 rounded-full bg-white/5" />
+   758→            </div>
+   759→
+   760→            {/* Category group bento grid */}
+   761→            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   762→              {view.cat.groups.map((group, i) => (
+   763→                <CategoryGroupCard
+   764→                  key={group.name}
+   765→                  group={group}
+   766→                  index={i}
+   767→                  onSelect={() =>
+   768→                    setView({ kind: "categoryGroup", cat: view.cat, group })
+   769→                  }
+   770→                />
+   771→              ))}
+   772→            </div>
+   773→          </>
+   774→        )}
+   775→
+   776→        {/* ═══════════════════════════════════════════════════
+   777→           CATEGORY GROUP VIEW (subcategories)
+   778→           ═══════════════════════════════════════════════════ */}
+   779→        {view.kind === "categoryGroup" && (
+   780→          <>
+   781→            {/* Section header */}
+   782→            <div className="flex items-start gap-4 mb-6">
+   783→              <div
+   784→                className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${view.group.color} flex items-center justify-center text-2xl shadow-lg flex-shrink-0`}
+   785→              >
+   786→                {view.group.icon}
+   787→              </div>
+   788→              <div>
+   789→                <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+   790→                  {view.group.name}
+   791→                </h1>
+   792→                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+   793→                  {view.group.description} · {view.group.subcategories.length} subcategories
+   794→                </p>
+   795→              </div>
+   796→            </div>
+   797→
+   798→            {/* Subcategory bento grid */}
+   799→            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+   800→              {view.group.subcategories.map((sub, i) => (
+   801→                <SubCategoryTile key={sub.name} sub={sub} index={i} />
+   802→              ))}
+   803→            </div>
+   804→          </>
+   805→        )}
+   806→
+   807→        {/* ═══════════════════════════════════════════════════
+   808→           SEARCH VIEW
+   809→           ═══════════════════════════════════════════════════ */}
+   810→        {view.kind === "search" && filteredApps !== null && (
+   811→          <>
+   812→            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-4">
+   813→              Results for &ldquo;{view.query}&rdquo;
+   814→              <span className="text-sm font-normal text-zinc-500 ml-2">
+   815→                {filteredApps.length} apps found
+   816→              </span>
+   817→            </h2>
+   818→            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+   819→              {filteredApps.map((app) => (
+   820→                <BentoAppCard key={app.id} app={app} />
+   821→              ))}
+   822→            </div>
+   823→            {filteredApps.length === 0 && (
+   824→              <div className="text-center py-20">
+   825→                <p className="text-5xl mb-4">🔍</p>
+   826→                <p className="text-zinc-500 dark:text-zinc-400">
+   827→                  No apps found for &ldquo;{view.query}&rdquo;
+   828→                </p>
+   829→              </div>
+   830→            )}
+   831→          </>
+   832→        )}
+   833→      </main>
+   834→
+   835→      {/* ═══════ MOBILE BOTTOM NAV ═══════ */}
+   836→      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-t border-zinc-200/60 dark:border-zinc-800/60 safe-area-bottom">
+   837→        <div className="flex items-center justify-around h-16 px-2">
+   838→          {[
+   839→            { label: "Home", icon: "home", active: view.kind === "home" },
+   840→            { label: "Categories", icon: "grid", active: view.kind === "topCategory" || view.kind === "categoryGroup" },
+   841→            { label: "Search", icon: "search", active: view.kind === "search" },
+   842→            { label: "Library", icon: "book-open", active: false },
+   843→            { label: "Profile", icon: "user", active: false },
+   844→          ].map((item) => (
+   845→            <button
+   846→              key={item.label}
+   847→              onClick={() => {
+   848→                if (item.label === "Home") handleNavClick("Home");
+   849→                else if (item.label === "Categories") {
+   850→                  if (view.kind !== "topCategory" && view.kind !== "categoryGroup") {
+   851→                    handleNavClick("Apps");
+   852→                  }
+   853→                }
+   854→                else if (item.label === "Search") {
+   855→                  // focus search input
+   856→                  const input = document.querySelector(
+   857→                    'input[placeholder*="Search"]'
+   858→                  ) as HTMLInputElement;
+   859→                  input?.focus();
+   860→                }
+   861→              }}
+   862→              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors ${
+   863→                item.active
+   864→                  ? "text-emerald-600 dark:text-emerald-400"
+   865→                  : "text-zinc-400 dark:text-zinc-500"
+   866→              }`}
+   867→            >
+   868→              <MobileNavIcon name={item.icon} />
+   869→              <span className="text-[10px] font-medium">{item.label}</span>
+   870→            </button>
+   871→          ))}
+   872→        </div>
+   873→      </nav>
+   874→
+   875→      <div className="md:hidden h-16" />
+   876→    </div>
+   877→  );
+   878→}
+   879→
+   880→/* ─── Navigation Icons ─── */
+   881→function MobileNavIcon({ name }: { name: string }) {
+   882→ const iconMap: Record<string, React.ReactNode> = {
+   883→    home: (
+   884→      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+   885→        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+   886→      </svg>
+   887→    ),
+   888→    grid: (
+   889→      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+   890→        <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+   891→      </svg>
+   892→    ),
+   893→    search: (
+   894→      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+   895→        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+   896→      </svg>
+   897→    ),
+   898→    "book-open": (
+   899→      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+   900→        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+   901→      </svg>
+   902→    ),
+   903→    user: (
+   904→      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+   905→        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+   906→      </svg>
+   907→    ),
+   908→  };
+   909→  return <>{iconMap[name]}</>;
+   910→}
+   911→
