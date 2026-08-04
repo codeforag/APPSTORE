@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   categorySections,
-  featuredApps,
-  bentoStats,
   categories,
   type AppItem,
 } from "@/lib/app-data";
@@ -214,92 +212,6 @@ function AppCarousel({
   );
 }
 
-/* ─── Featured Banner ─── */
-function FeaturedBanner({
-  app,
-  index,
-}: {
-  app: (typeof featuredApps)[0];
-  index: number;
-}) {
-  return (
-    <button
-      className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br ${app.bannerGradient} p-5 sm:p-6 md:p-8 text-left text-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-0.5 w-full ${
-        index === 0 ? "md:col-span-2 md:row-span-2" : ""
-      }`}
-    >
-      <div className="relative z-10 flex flex-col justify-between h-full min-h-[140px] sm:min-h-[180px]">
-        <div>
-          <Badge className="mb-2 bg-white/20 text-white border-0 backdrop-blur-sm text-xs">
-            {app.category}
-          </Badge>
-          <h3 className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight">
-            {app.name}
-          </h3>
-          <p className="text-sm text-white/80 mt-1 font-medium">
-            {app.developer}
-          </p>
-          <p className="text-sm text-white/70 mt-2 line-clamp-2 max-w-md">
-            {app.description}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 mt-4">
-          <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
-            <svg className="h-3.5 w-3.5 text-amber-300" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span className="text-xs font-semibold text-white">
-              {app.rating}
-            </span>
-          </div>
-          <span className="text-xs text-white/70">
-            {app.reviews} reviews
-          </span>
-          <span
-            className={`ml-auto text-sm font-bold ${
-              app.price === "Free" ? "text-emerald-300" : "text-white"
-            }`}
-          >
-            {app.price}
-          </span>
-        </div>
-      </div>
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 text-5xl sm:text-7xl opacity-20 group-hover:opacity-30 transition-opacity">
-        {app.icon}
-      </div>
-    </button>
-  );
-}
-
-/* ─── Bento Stat Card ─── */
-function BentoStatCard({
-  stat,
-  index,
-}: {
-  stat: (typeof bentoStats)[0];
-  index: number;
-}) {
-  const gradients = [
-    "from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20",
-    "from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20",
-    "from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/20",
-    "from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20",
-  ];
-  return (
-    <div
-      className={`bg-gradient-to-br ${gradients[index % gradients.length]} rounded-3xl p-4 sm:p-5 border border-zinc-100 dark:border-zinc-800`}
-    >
-      <span className="text-2xl">{stat.icon}</span>
-      <p className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-100 mt-2">
-        {stat.value}
-      </p>
-      <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-        {stat.label}
-      </p>
-    </div>
-  );
-}
-
 /* ─── Category Pill ─── */
 function CategoryPill({
   cat,
@@ -471,24 +383,6 @@ export default function AppStorePage() {
           </div>
         ) : (
           <>
-            {/* ─── Bento Grid: Featured + Stats ─── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <FeaturedBanner app={featuredApps[0]} index={0} />
-              <div className="flex flex-col gap-4">
-                <FeaturedBanner app={featuredApps[1]} index={1} />
-                <div className="grid grid-cols-2 gap-4">
-                  {bentoStats.slice(0, 2).map((stat, i) => (
-                    <BentoStatCard key={stat.label} stat={stat} index={i} />
-                  ))}
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-4">
-                {bentoStats.slice(2).map((stat, i) => (
-                  <BentoStatCard key={stat.label} stat={stat} index={i + 2} />
-                ))}
-              </div>
-            </div>
-
             {/* ─── Category Carousels ─── */}
             {categorySections.map((section) => (
               <AppCarousel
