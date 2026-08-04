@@ -146,11 +146,11 @@ function Stars({ rating }: { rating: number }) {
 function AppCard({ app }: { app: AppItem }) {
   return (
     <button className="group flex flex-col items-center text-center p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all duration-200 w-full min-w-[100px] snap-start">
-      <div className={`w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-[22px] ${app.iconBg} flex items-center justify-center text-2xl sm:text-3xl shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 flex-shrink-0 relative`}>
+      <div className={`w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-[22px] ${app.iconBg} flex items-center justify-center text-3xl sm:text-4xl shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 flex-shrink-0 relative`}>
         {app.icon}
         {app.badge && <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">{app.badge}</span>}
       </div>
-      <p className="text-[13px] font-medium mt-2.5 line-clamp-2 text-zinc-900 dark:text-zinc-100 leading-tight max-w-[120px]">{app.name}</p>
+      <p className="text-[13px] font-medium mt-3 line-clamp-2 text-zinc-900 dark:text-zinc-100 leading-tight max-w-[120px]">{app.name}</p>
       <div className="flex items-center gap-1 mt-1">
         <span className="text-xs text-zinc-600 dark:text-zinc-400">{app.rating}</span>
         <Stars rating={app.rating} />
@@ -198,7 +198,7 @@ function SkeletonHome() {
           <div className="flex gap-4 overflow-hidden">
             {[0,1,2,3,4,5].map(j => (
               <div key={j} className="flex flex-col items-center gap-2 min-w-[100px]">
-                <Skeleton className="w-16 h-16 rounded-[22px]" />
+                <Skeleton className="w-[72px] h-[72px] rounded-[22px]" />
                 <Skeleton className="h-4 w-20 rounded" />
                 <Skeleton className="h-3 w-12 rounded" />
               </div>
@@ -577,7 +577,7 @@ export default function AppStorePage() {
                   {filteredApps.map((app) => (
                     <button key={app.id} className="group relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 text-left">
                       <div className="flex items-start gap-4">
-                        <div className={`w-14 h-14 rounded-2xl ${app.iconBg} flex items-center justify-center text-2xl shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>{app.icon}</div>
+                        <div className={`w-[72px] h-[72px] rounded-2xl ${app.iconBg} flex items-center justify-center text-3xl shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>{app.icon}</div>
                         <div className="min-w-0 flex-1">
                           <h4 className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 truncate">{app.name}</h4>
                           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{app.developer}</p>
