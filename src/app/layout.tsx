@@ -14,12 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AppStore - Discover Amazing Apps & Games",
-  description: "Discover and download the best Android apps and games. Curated collections, top charts, and personalized recommendations.",
-  keywords: ["app store", "android apps", "mobile apps", "games", "download apps"],
-  icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
-  },
+  title: "A2Z MEDIA — Modern App Discovery",
+  description: "A2Z MEDIA brings modern glassmorphism UI design and curated app experiences. Discover apps, games, and media in a futuristic marketplace.",
+  keywords: ["A2Z MEDIA", "app marketplace", "glassmorphism", "modern UI", "apps", "games"],
 };
 
 export default function RootLayout({

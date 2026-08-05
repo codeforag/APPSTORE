@@ -145,7 +145,7 @@ function Stars({ rating }: { rating: number }) {
 /* ─── App Card (vertical for carousels) ─── */
 function AppCard({ app }: { app: AppItem }) {
   return (
-    <button className="group flex flex-col items-center text-center p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all duration-200 w-full min-w-[100px] snap-start">
+    <button className="group relative flex flex-col items-center text-center p-4 rounded-[32px] glass-card hover:-translate-y-1 hover:shadow-[0_30px_70px_rgba(16,185,129,0.18)] transition-all duration-300 w-full min-w-[100px] snap-start">
       <div className={`w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-[22px] ${app.iconBg} flex items-center justify-center text-3xl sm:text-4xl shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 flex-shrink-0 relative`}>
         {app.icon}
         {app.badge && <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">{app.badge}</span>}
@@ -252,7 +252,7 @@ function TopCategoryCard({ cat, onSelect }: { cat: TopLevelCategory; onSelect: (
   return (
     <button
       onClick={onSelect}
-      className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br ${cat.gradient} p-6 sm:p-8 text-left text-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 active:scale-[0.98]`}
+      className={`group relative overflow-hidden rounded-[36px] glass-card border border-white/10 p-6 sm:p-8 text-left text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_40px_80px_rgba(15,23,42,0.25)] active:scale-[0.98]`}
     >
       <div className="relative z-10">
         <span className="text-4xl sm:text-5xl block mb-3 group-hover:scale-110 transition-transform duration-300 drop-shadow-lg">{cat.icon}</span>
@@ -281,7 +281,7 @@ function CategoryGroupCard({ group, onSelect, index }: { group: CategoryGroup; o
   return (
     <button
       onClick={onSelect}
-      className={`group relative overflow-hidden rounded-3xl ${theme.bg} border ${theme.border} text-left transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] ${isLarge ? "sm:col-span-2" : ""}`}
+      className={`group relative overflow-hidden rounded-[32px] glass-card border border-white/10 text-left transition-all duration-300 hover:shadow-[0_28px_70px_rgba(15,23,42,0.22)] hover:-translate-y-0.5 active:scale-[0.98] ${isLarge ? "sm:col-span-2" : ""}`}
     >
       <div className="p-5 sm:p-6">
         <div className="flex items-start gap-4">
@@ -326,7 +326,7 @@ function SubCategoryTile({ sub, index, theme }: { sub: SubCategory; index: numbe
   const isHero = index === 0;
   return (
     <button
-      className={`group relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 transition-all duration-300 hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-zinc-900/50 hover:-translate-y-0.5 active:scale-[0.98] text-left ${
+      className={`group relative overflow-hidden rounded-[32px] bg-white/10 dark:bg-white/10 border border-white/10 glass-card transition-all duration-300 hover:shadow-[0_30px_80px_rgba(15,23,42,0.2)] hover:-translate-y-0.5 active:scale-[0.98] text-left ${
         isHero ? "sm:col-span-2 sm:row-span-2" : ""
       }`}
     >
@@ -377,7 +377,7 @@ function Breadcrumb({ segments, onNavigate }: { segments: { label: string; icon?
 /* ═══════════════════════════════════════════════════════════
    MAIN PAGE
    ═══════════════════════════════════════════════════════════ */
-export default function AppStorePage() {
+export default function A2ZMediaPage() {
   const [view, setView] = useState<ViewMode>({ kind: "home" });
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -429,7 +429,7 @@ export default function AppStorePage() {
   const filteredApps = view.kind === "search" ? allApps.filter((a) => a.name.toLowerCase().includes(view.query.toLowerCase()) || a.developer.toLowerCase().includes(view.query.toLowerCase()) || a.category.toLowerCase().includes(view.query.toLowerCase())) : null;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen text-slate-100 bg-transparent">
       {/* ═══════ HEADER ═══════ */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-200/60 dark:border-zinc-800/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -440,7 +440,7 @@ export default function AppStorePage() {
                   <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M12 12v9" /><path d="m8 17 4 4 4-4" />
                 </svg>
               </div>
-              <span className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 hidden sm:block">AppStore</span>
+              <span className="text-base sm:text-lg font-bold text-slate-100 hidden sm:block">A2Z MEDIA</span>
             </button>
 
             <nav className="hidden md:flex items-center gap-1 ml-6">
@@ -671,15 +671,15 @@ function SiteFooter() {
           {/* Brand column */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-1 mb-4 lg:mb-0">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 via-sky-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M12 12v9" /><path d="m8 17 4 4 4-4" />
                 </svg>
               </div>
-              <span className="text-lg font-bold tracking-tight">OpenStore</span>
+              <span className="text-lg font-bold tracking-tight">A2Z MEDIA</span>
             </div>
             <p className="text-[13px] sm:text-sm leading-relaxed text-[#94A3B8] max-w-[260px]">
-              An open-source app marketplace for Android &amp; iOS. Zero cost, no ads struggles, just pure discovery.
+              A2Z MEDIA is a futuristic app and media platform built with glassmorphism design, immersive motion, and premium discovery.
             </p>
             {/* Social icons */}
             <div className="flex items-center gap-2.5 mt-5">
@@ -711,7 +711,7 @@ function SiteFooter() {
           <div className="max-w-sm">
             <h4 className="text-base font-semibold text-white mb-1.5">Subscribe to Updates</h4>
             <p className="text-[13px] text-[#94A3B8] leading-relaxed">
-              Get the latest news, features and updates from OpenStore.
+              Get the latest news, features and updates from A2Z MEDIA.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -730,7 +730,7 @@ function SiteFooter() {
       {/* ── Bottom bar ── */}
       <div className="border-t border-[#1E293B]">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-5 flex flex-col sm:flex-row items-center sm:justify-between gap-3">
-          <span className="text-[13px] text-[#64748B]">© 2024 OpenStore. All rights reserved.</span>
+          <span className="text-[13px] text-[#64748B]">© 2026 A2Z MEDIA. All rights reserved.</span>
           <div className="flex items-center gap-5 text-[13px] text-[#64748B]">
             <span className="flex items-center gap-1.5">
               <span className="text-red-500">❤️</span> Made with love for developers worldwide
