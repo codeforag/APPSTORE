@@ -145,7 +145,7 @@ function Stars({ rating }: { rating: number }) {
 /* ─── App Card (vertical for carousels) ─── */
 function AppCard({ app }: { app: AppItem }) {
   return (
-    <button className="group relative flex flex-col items-center text-center p-4 rounded-[32px] glass-card hover:-translate-y-1 hover:shadow-[0_30px_70px_rgba(16,185,129,0.18)] transition-all duration-300 w-full min-w-[100px] snap-start">
+    <button className="group relative flex flex-col items-center text-center p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 w-full min-w-[100px] snap-start">
       <div className={`w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-[22px] ${app.iconBg} flex items-center justify-center text-3xl sm:text-4xl shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-200 flex-shrink-0 relative`}>
         {app.icon}
         {app.badge && <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">{app.badge}</span>}
@@ -252,17 +252,17 @@ function TopCategoryCard({ cat, onSelect }: { cat: TopLevelCategory; onSelect: (
   return (
     <button
       onClick={onSelect}
-      className={`group relative overflow-hidden rounded-[36px] glass-card border border-white/10 p-6 sm:p-8 text-left text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_40px_80px_rgba(15,23,42,0.25)] active:scale-[0.98]`}
+      className={`group relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 p-6 sm:p-8 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98]`}
     >
       <div className="relative z-10">
         <span className="text-4xl sm:text-5xl block mb-3 group-hover:scale-110 transition-transform duration-300 drop-shadow-lg">{cat.icon}</span>
         <h3 className="text-xl sm:text-2xl font-bold drop-shadow-sm">{cat.name}</h3>
         <p className="text-sm text-white/75 mt-1">{cat.description}</p>
         <div className="flex flex-wrap gap-2 mt-4">
-          <span className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold">
+          <span className="bg-gray-100 dark:bg-zinc-800 rounded-full px-3 py-1 text-xs font-semibold text-gray-700 dark:text-gray-300">
             {cat.groups.length} {cat.groups.length === 1 ? "category" : "categories"}
           </span>
-          <span className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold">
+          <span className="bg-gray-100 dark:bg-zinc-800 rounded-full px-3 py-1 text-xs font-semibold text-gray-700 dark:text-gray-300">
             {totalSubs} subcategories
           </span>
         </div>
@@ -281,7 +281,7 @@ function CategoryGroupCard({ group, onSelect, index }: { group: CategoryGroup; o
   return (
     <button
       onClick={onSelect}
-      className={`group relative overflow-hidden rounded-[32px] glass-card border border-white/10 text-left transition-all duration-300 hover:shadow-[0_28px_70px_rgba(15,23,42,0.22)] hover:-translate-y-0.5 active:scale-[0.98] ${isLarge ? "sm:col-span-2" : ""}`}
+      className={`group relative overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] ${isLarge ? "sm:col-span-2" : ""}`}
     >
       <div className="p-5 sm:p-6">
         <div className="flex items-start gap-4">
@@ -326,7 +326,7 @@ function SubCategoryTile({ sub, index, theme }: { sub: SubCategory; index: numbe
   const isHero = index === 0;
   return (
     <button
-      className={`group relative overflow-hidden rounded-[32px] bg-white/10 dark:bg-white/10 border border-white/10 glass-card transition-all duration-300 hover:shadow-[0_30px_80px_rgba(15,23,42,0.2)] hover:-translate-y-0.5 active:scale-[0.98] text-left ${
+      className={`group relative overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] text-left ${
         isHero ? "sm:col-span-2 sm:row-span-2" : ""
       }`}
     >
@@ -429,9 +429,9 @@ export default function A2ZMediaPage() {
   const filteredApps = view.kind === "search" ? allApps.filter((a) => a.name.toLowerCase().includes(view.query.toLowerCase()) || a.developer.toLowerCase().includes(view.query.toLowerCase()) || a.category.toLowerCase().includes(view.query.toLowerCase())) : null;
 
   return (
-    <div className="min-h-screen text-slate-100 bg-transparent">
+    <div className="min-h-screen text-slate-100 bg-gray-50 dark:bg-zinc-950">
       {/* ═══════ HEADER ═══════ */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-200/60 dark:border-zinc-800/60">
+      <header className="sticky top-0 z-50 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center h-14 sm:h-16 gap-3">
             <button onClick={() => handleNavClick("Home")} className="flex items-center gap-2 flex-shrink-0 hover:opacity-80 transition-opacity">
@@ -526,10 +526,10 @@ export default function A2ZMediaPage() {
                       <h1 className="text-xl sm:text-3xl font-bold text-white drop-shadow-sm">{view.cat.name}</h1>
                       <p className="text-sm text-white/75 mt-0.5">{view.cat.description}</p>
                       <div className="flex flex-wrap gap-2 mt-3">
-                        <span className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold text-white">
+                        <span className="bg-white/30 rounded-full px-3 py-1 text-xs font-semibold text-white">
                           {view.cat.groups.length} {view.cat.groups.length === 1 ? "category" : "categories"}
                         </span>
-                        <span className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold text-white">
+                        <span className="bg-white/30 rounded-full px-3 py-1 text-xs font-semibold text-white">
                           {view.cat.groups.reduce((a, g) => a + g.subcategories.length, 0)} subcategories
                         </span>
                       </div>
@@ -607,7 +607,7 @@ export default function A2ZMediaPage() {
       {view.kind === "home" && <SiteFooter />}
 
       {/* ═══ MOBILE BOTTOM NAV ═══ */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-t border-zinc-200/60 dark:border-zinc-800/60 safe-area-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800 safe-area-bottom">
         <div className="flex items-center justify-around h-16 px-2">
           {[
             { label: "Home", icon: "home", kind: "home" as const },
@@ -679,7 +679,7 @@ function SiteFooter() {
               <span className="text-lg font-bold tracking-tight">A2Z MEDIA</span>
             </div>
             <p className="text-[13px] sm:text-sm leading-relaxed text-[#94A3B8] max-w-[260px]">
-              A2Z MEDIA is a futuristic app and media platform built with glassmorphism design, immersive motion, and premium discovery.
+              A2Z MEDIA is a modern app and media platform with clean design, smooth motion, and premium discovery.
             </p>
             {/* Social icons */}
             <div className="flex items-center gap-2.5 mt-5">

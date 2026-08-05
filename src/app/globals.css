@@ -119,21 +119,7 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    background-image: radial-gradient(circle at top left, rgba(56,189,248,0.18), transparent 20%), radial-gradient(circle at 85% 10%, rgba(168,85,247,0.16), transparent 18%), radial-gradient(circle at 50% 120%, rgba(16,185,129,0.14), transparent 25%);
     @apply min-h-screen antialiased;
-  }
-  .glass-card {
-    background: rgba(15, 23, 42, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
-    box-shadow: 0 26px 60px rgba(15, 23, 42, 0.22);
-  }
-  .glass-panel {
-    background: rgba(15, 23, 42, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
   }
 }
 

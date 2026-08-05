@@ -135,7 +135,7 @@ export const categorySections: { title: string; apps: AppItem[] }[] = [
         category: "Personalization",
         icon: "🪟",
         iconBg: "bg-slate-500",
-        description: "Elegant frosted glass widgets",
+        description: "Elegant modern widgets",
         size: "8MB",
       },
     ],
